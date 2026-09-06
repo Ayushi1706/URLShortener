@@ -7,7 +7,9 @@ import org.spring.linkpulse.repository.LinkRepository;
 import org.spring.linkpulse.util.Base62Encoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class LinkService {
@@ -23,5 +25,11 @@ public class LinkService {
         linkRepository.save(link);
         String shortUrl = baseUrl + "/" + link.getShortCode();
         return new LinkResponse(shortUrl);
+    }
+
+    public String getOriginalUrl(String shortCode) {
+        Link link = linkRepository.findByShortCode(shortCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return link.getOriginalUrl();
     }
 }
