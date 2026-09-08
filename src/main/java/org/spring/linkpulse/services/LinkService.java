@@ -7,6 +7,7 @@ import org.spring.linkpulse.repository.LinkRepository;
 import org.spring.linkpulse.util.Base62Encoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,5 +38,8 @@ public class LinkService {
         Link link = linkRepository.findByShortCode(shortCode)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return link.getOriginalUrl();
+    }
+    @CacheEvict(value = "links", key = "#shortCode")
+    public void evictLinkCache(String shortCode) {
     }
 }
