@@ -1,3 +1,5 @@
 package org.spring.linkpulse.dto;
 
-public record CreateLinkRequest(String url, String customAlias) {}
+import java.time.LocalDateTime;
+
+public record CreateLinkRequest(String url, String customAlias, LocalDateTime expiresAt) {}
