@@ -14,6 +14,11 @@ public class ClickEventProducer {
     private static final String TOPIC = "click-events";
 
     public void publishClickEvent(ClickEvent event) {
-        kafkaTemplate.send(TOPIC, event.getShortCode(), event);
+        kafkaTemplate.send(TOPIC, event.getShortCode(), event)
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        System.err.println("Failed to publish click event: " + ex.getMessage());
+                    }
+                });
     }
 }
