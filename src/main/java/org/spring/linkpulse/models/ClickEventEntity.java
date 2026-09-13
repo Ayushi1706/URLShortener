@@ -20,6 +20,7 @@ public class ClickEventEntity {
     private String ipAddress;
     private String userAgent;
     private String referrer;
+    private String country;
 
     public ClickEventEntity(ClickEvent clickEvent) {
         this.shortCode = clickEvent.getShortCode();
@@ -27,5 +28,6 @@ public class ClickEventEntity {
         this.ipAddress = clickEvent.getIpAddress();
         this.userAgent = clickEvent.getUserAgent();
         this.referrer = clickEvent.getReferrer();
+        this.country = clickEvent.getCountry();
     }
 }

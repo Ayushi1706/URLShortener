@@ -3,6 +3,7 @@ package org.spring.linkpulse.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import org.spring.linkpulse.messaging.ClickEventProducer;
 import org.spring.linkpulse.models.ClickEvent;
+import org.spring.linkpulse.services.GeoLocationService;
 import org.spring.linkpulse.services.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,8 @@ public class RedirectController {
     @Autowired
     private LinkService linkService;
     @Autowired
+    private GeoLocationService geoLocationService;
+    @Autowired
     private ClickEventProducer clickEventProducer;
 
     @GetMapping("/{shortCode}")
@@ -27,12 +30,15 @@ public class RedirectController {
             HttpServletRequest request
     ) {
         String originalUrl = linkService.getOriginalUrl(shortCode);
+        String ipAddress = request.getRemoteAddr();
+        String country = geoLocationService.getCountry(ipAddress);
         ClickEvent clickEvent = new ClickEvent(
                 shortCode,
                 LocalDateTime.now(),
                 request.getRemoteAddr(),
                 request.getHeader("User-Agent"),
-                request.getHeader("Referer")
+                request.getHeader("Referer"),
+                country
         );
         clickEventProducer.publishClickEvent(clickEvent);
         return ResponseEntity
