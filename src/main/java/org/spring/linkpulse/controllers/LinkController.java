@@ -9,7 +9,10 @@ import org.spring.linkpulse.services.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/links")
@@ -34,5 +37,12 @@ public class LinkController {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Rate limit exceeded. Try again in a minute.");
         }
+    }
+
+    @GetMapping("")
+    public ResponseEntity<List<LinkResponse>> getLinks(
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(linkService.getAllLinks(authentication.getName()));
     }
 }
