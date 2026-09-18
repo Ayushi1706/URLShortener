@@ -6,8 +6,10 @@ import org.spring.linkpulse.exception.AliasAlreadyTakenException;
 import org.spring.linkpulse.exception.LinkExpiredException;
 import org.spring.linkpulse.exception.LinkNotFoundException;
 import org.spring.linkpulse.models.Link;
+import org.spring.linkpulse.models.User;
 import org.spring.linkpulse.repository.AnalyticsRepository;
 import org.spring.linkpulse.repository.LinkRepository;
+import org.spring.linkpulse.repository.UserRepository;
 import org.spring.linkpulse.util.Base62Encoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,15 +29,21 @@ public class LinkService {
     @Autowired
     private AnalyticsRepository analyticsRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Value("${app.base-url}")
     private String baseUrl;
-    public LinkResponse createLink(CreateLinkRequest request) {
+    public LinkResponse createLink(CreateLinkRequest request, String ownerEmail) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + ownerEmail));
 
         Link link = new Link();
 
         link.setOriginalUrl(request.url());
         link.setExpiresAt(request.expiresAt());
+        link.setOwner(owner);
 
         if (request.customAlias() != null && !request.customAlias().isBlank()) {
 
@@ -90,7 +98,7 @@ public class LinkService {
     }
 
     public List<LinkResponse> getAllLinks(String email) {
-        return linkRepository.findAllByOwnerEmail(email)
+        return linkRepository.findAllByOwner_Email(email)
                 .stream()
                 .map(link -> new LinkResponse(
                         link.getId(),

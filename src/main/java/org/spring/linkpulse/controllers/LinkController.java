@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.spring.linkpulse.config.RateLimiterConfig;
 import org.spring.linkpulse.dto.CreateLinkRequest;
 import org.spring.linkpulse.dto.LinkResponse;
+import org.spring.linkpulse.dto.UserDto;
 import org.spring.linkpulse.services.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,14 +27,16 @@ public class LinkController {
     @PostMapping("")
     public ResponseEntity<?> createLink(
             @RequestBody CreateLinkRequest request,
-            HttpServletRequest httpRequest
+            HttpServletRequest httpRequest,
+            Authentication authentication
     ) {
         String ip = httpRequest.getRemoteAddr();
         Bucket bucket = rateLimiterConfig.resolveBucket(ip);
         if (bucket.tryConsume(1)) {
-            LinkResponse linkResponse = linkService.createLink(request);
+            UserDto userDto = (UserDto) authentication.getPrincipal();
+            LinkResponse linkResponse = linkService.createLink(request, userDto.email());
             return ResponseEntity.ok(linkResponse);
-        } else{
+        } else {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Rate limit exceeded. Try again in a minute.");
         }
@@ -43,6 +46,7 @@ public class LinkController {
     public ResponseEntity<List<LinkResponse>> getLinks(
             Authentication authentication
     ) {
-        return ResponseEntity.ok(linkService.getAllLinks(authentication.getName()));
+        UserDto userDto = (UserDto) authentication.getPrincipal();
+        return ResponseEntity.ok(linkService.getAllLinks(userDto.email()));
     }
 }

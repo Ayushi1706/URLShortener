@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface LinkRepository extends JpaRepository<Link, Long> {
     Optional<Link> findByShortCode(String shortCode);
 
-    List<Link> findAllByOwnerEmail(String email);
+    List<Link> findAllByOwner_Email(String email);
 }
