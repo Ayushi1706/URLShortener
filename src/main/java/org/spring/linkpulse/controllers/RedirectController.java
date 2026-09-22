@@ -2,8 +2,8 @@ package org.spring.linkpulse.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.spring.linkpulse.messaging.ClickEventProducer;
 import org.spring.linkpulse.models.ClickEvent;
+import org.spring.linkpulse.services.ClickTrackingService;
 import org.spring.linkpulse.services.GeoLocationService;
 import org.spring.linkpulse.services.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +21,13 @@ public class RedirectController {
 
     @Autowired
     private LinkService linkService;
+
     @Autowired
     private GeoLocationService geoLocationService;
+
     @Autowired
-    private ClickEventProducer clickEventProducer;
+    private ClickTrackingService clickTrackingService;  // NEW
+
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirectToOriginalUrl(
             @PathVariable String shortCode,
@@ -35,6 +38,7 @@ public class RedirectController {
         try {
             String ipAddress = request.getRemoteAddr();
             String country = geoLocationService.getCountry(ipAddress);
+
             ClickEvent clickEvent = new ClickEvent(
                     shortCode,
                     LocalDateTime.now(),
@@ -43,7 +47,10 @@ public class RedirectController {
                     request.getHeader("Referer"),
                     country
             );
-            clickEventProducer.publishClickEvent(clickEvent);
+
+
+            clickTrackingService.trackClick(clickEvent);
+
         } catch (Exception e) {
             log.warn("Failed to record click analytics for {}: {}", shortCode, e.getMessage());
         }
