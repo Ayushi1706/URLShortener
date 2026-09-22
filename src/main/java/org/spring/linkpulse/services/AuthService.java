@@ -21,7 +21,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtTokenProvider;
 
-    public UserDto register(        RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.findByEmail(request.email()).isPresent()) {
             throw new EmailAlreadyRegisteredException(request.email());
@@ -33,9 +33,10 @@ public class AuthService {
 
         User saved = userRepository.save(user);
 
-        return UserDto.from(saved);
-    }
+        String token = jwtTokenProvider.generateToken(saved.getEmail(), saved.getId());
 
+        return new AuthResponse(token, UserDto.from(saved));
+    }
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository
