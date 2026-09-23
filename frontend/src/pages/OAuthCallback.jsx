@@ -10,11 +10,9 @@ export default function OAuthCallback() {
         const token = searchParams.get('token')
 
         if (token) {
-            // Store JWT token in localStorage
             localStorage.setItem('authToken', token)
 
-            // Redirect to dashboard
-            navigate('/app/shorten')
+            navigate('/')
         } else {
             setError('Authentication failed. No token received.')
             setTimeout(() => navigate('/login'), 2000)
