@@ -4,51 +4,70 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.spring.linkpulse.dto.UserDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @Component
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
+
     @Autowired
     private JwtUtil jwtUtil;
 
-    public JwtAuthFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
-
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        String requestURI = request.getRequestURI();
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        // Skip OAuth2 and login endpoints - they don't need JWT
+        if (requestURI.startsWith("/oauth2/") ||
+                requestURI.startsWith("/login/") ||
+                requestURI.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (jwtUtil.isValid(token)) {
+        try {
+            String token = extractTokenFromRequest(request);
+
+            if (token != null && jwtUtil.isValid(token)) {
                 String email = jwtUtil.extractEmail(token);
                 Long userId = jwtUtil.extractUserId(token);
 
-                var principal = new UserDto(userId, email);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                userId,
+                                null
+                        );
 
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        principal, null, Collections.emptyList());
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("JWT Token validated for user: {}", email);
             }
+        } catch (Exception e) {
+            log.warn("JWT validation failed: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        return null;
     }
 }
