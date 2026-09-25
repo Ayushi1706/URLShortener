@@ -27,16 +27,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String requestURI = request.getRequestURI();
-
-        // Skip OAuth2 and login endpoints - they don't need JWT
-        if (requestURI.startsWith("/oauth2/") ||
-                requestURI.startsWith("/login/") ||
-                requestURI.startsWith("/api/auth/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         try {
             String token = extractTokenFromRequest(request);
 
