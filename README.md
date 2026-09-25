@@ -77,7 +77,7 @@ Databases
 
 ### Frontend
 - **Next.js 14** — React framework for production apps
-- **TypeScript** — Type-safe React development
+- **JavaScript** — The language of the web for React development
 - **Tailwind CSS** — Utility-first styling
 - **Recharts** — Beautiful, responsive charts
 - **React Router** — Client-side routing
